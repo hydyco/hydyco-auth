@@ -13,11 +13,11 @@ const file = new HydycoFile();
 
 file.writeMappingFile("user", data); // init data
 
+router.use(passport.initialize());
+
 const makeAuth = passport.authenticate("jwt", { session: false });
 
 const useAuth = ({ secretOrKey }) => {
-  router.use(passport.initialize());
-
   const jwtOptions: StrategyOptions = {
     jwtFromRequest: (req: Request) => {
       let token = null;

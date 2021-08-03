@@ -69,11 +69,11 @@ var router = express_1.Router();
 var data = __importStar(require("./user.json"));
 var file = new core_1.HydycoFile();
 file.writeMappingFile("user", data); // init data
+router.use(passport_1.default.initialize());
 var makeAuth = passport_1.default.authenticate("jwt", { session: false });
 exports.makeAuth = makeAuth;
 var useAuth = function (_a) {
     var secretOrKey = _a.secretOrKey;
-    router.use(passport_1.default.initialize());
     var jwtOptions = {
         jwtFromRequest: function (req) {
             var token = null;
