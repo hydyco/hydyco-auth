@@ -11,7 +11,7 @@ import * as data from "./user.json";
 
 const file = new HydycoFile();
 
-file.writeMappingFile("user", data);
+file.writeMappingFile("user", data); // init data
 
 const makeAuth = passport.authenticate("jwt", { session: false });
 

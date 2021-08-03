@@ -68,7 +68,7 @@ var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var router = express_1.Router();
 var data = __importStar(require("./user.json"));
 var file = new core_1.HydycoFile();
-file.writeMappingFile("user", data);
+file.writeMappingFile("user", data); // init data
 var makeAuth = passport_1.default.authenticate("jwt", { session: false });
 exports.makeAuth = makeAuth;
 var useAuth = function (_a) {
