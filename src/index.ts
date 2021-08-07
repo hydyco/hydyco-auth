@@ -1,17 +1,20 @@
-import { Router, Request, Response, NextFunction, response } from "express";
+import { Router, Request } from "express";
 import passport from "passport";
 import { HydycoModel } from "@hydyco/mongoose-plugin";
 import { HydycoFile } from "@hydyco/core";
 import { Strategy as JwtStrategy, StrategyOptions } from "passport-jwt";
 import JWT from "jsonwebtoken";
-
-const router = Router();
+import fs from "fs";
+import path from "path";
 
 import * as data from "./user.json";
 
+const router = Router();
+
 const file = new HydycoFile();
 
-file.writeMappingFile("user", data); // init data
+if (!fs.existsSync(path.join(file.hydycoMappingDir, "user.json")))
+  file.writeMappingFile("user", data); // init data
 
 router.use(passport.initialize());
 

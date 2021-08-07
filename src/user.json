@@ -69,9 +69,26 @@
       "relationship": "hasmany",
       "enum": [],
       "autopopulate": true
+    },
+    "role": {
+      "name": "role",
+      "type": "string",
+      "default": "guest",
+      "index": false,
+      "maxLength": 0,
+      "minLength": 0,
+      "required": false,
+      "trim": false,
+      "unique": false,
+      "uppercase": false,
+      "lowercase": true,
+      "ref": "none",
+      "relationship": "hasmany",
+      "enum": ["guest", "user", "admin"],
+      "autopopulate": true
     }
   },
-  "fields": 4,
+  "fields": 5,
   "show": true,
   "operations": {
     "list": true,

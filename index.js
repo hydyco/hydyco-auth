@@ -65,10 +65,13 @@ var mongoose_plugin_1 = require("@hydyco/mongoose-plugin");
 var core_1 = require("@hydyco/core");
 var passport_jwt_1 = require("passport-jwt");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-var router = express_1.Router();
+var fs_1 = __importDefault(require("fs"));
+var path_1 = __importDefault(require("path"));
 var data = __importStar(require("./user.json"));
+var router = express_1.Router();
 var file = new core_1.HydycoFile();
-file.writeMappingFile("user", data); // init data
+if (!fs_1.default.existsSync(path_1.default.join(file.hydycoMappingDir, "user.json")))
+    file.writeMappingFile("user", data); // init data
 router.use(passport_1.default.initialize());
 var makeAuth = passport_1.default.authenticate("jwt", { session: false });
 exports.makeAuth = makeAuth;
