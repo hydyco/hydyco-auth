@@ -36,18 +36,18 @@ const useAuth = ({ secretOrKey }) => {
     new JwtStrategy(jwtOptions, async (token, done) => {
       if (!token) return done(null, true);
       try {
-        const userId: string = token.aud;
-        return done(null, userId);
+        const user: Object = JSON.parse(token.aud);
+        return done(null, user);
       } catch (e) {
         return done(null, false);
       }
     })
   );
 
-  function generateAccessToken(userId: number): string {
+  function generateAccessToken(user: Object): string {
     const options: JWT.SignOptions = {
       expiresIn: "1y",
-      audience: userId.toString(),
+      audience: JSON.stringify(user),
     };
     return JWT.sign({}, secretOrKey, options);
   }
@@ -61,7 +61,7 @@ const useAuth = ({ secretOrKey }) => {
       if (!user)
         return response.send({ status: false, message: "User not found" });
 
-      const token = generateAccessToken(user._id);
+      const token = generateAccessToken(user);
 
       return response.send({ status: true, message: "User authorized", token });
     } catch (error) {

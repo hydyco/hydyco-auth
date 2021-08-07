@@ -89,13 +89,13 @@ var useAuth = function (_a) {
     };
     //JWT strategy options for passport (jwt middleware to verify & sign user)
     passport_1.default.use(new passport_jwt_1.Strategy(jwtOptions, function (token, done) { return __awaiter(_this, void 0, void 0, function () {
-        var userId;
+        var user;
         return __generator(this, function (_a) {
             if (!token)
                 return [2 /*return*/, done(null, true)];
             try {
-                userId = token.aud;
-                return [2 /*return*/, done(null, userId)];
+                user = JSON.parse(token.aud);
+                return [2 /*return*/, done(null, user)];
             }
             catch (e) {
                 return [2 /*return*/, done(null, false)];
@@ -103,10 +103,10 @@ var useAuth = function (_a) {
             return [2 /*return*/];
         });
     }); }));
-    function generateAccessToken(userId) {
+    function generateAccessToken(user) {
         var options = {
             expiresIn: "1y",
-            audience: userId.toString(),
+            audience: JSON.stringify(user),
         };
         return jsonwebtoken_1.default.sign({}, secretOrKey, options);
     }
@@ -125,7 +125,7 @@ var useAuth = function (_a) {
                     user = _a.sent();
                     if (!user)
                         return [2 /*return*/, response.send({ status: false, message: "User not found" })];
-                    token = generateAccessToken(user._id);
+                    token = generateAccessToken(user);
                     return [2 /*return*/, response.send({ status: true, message: "User authorized", token: token })];
                 case 3:
                     error_1 = _a.sent();
