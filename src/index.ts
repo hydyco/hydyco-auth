@@ -99,15 +99,20 @@ const useAuth = ({ secretOrKey }) => {
           .status(404);
 
       user.comparePassword(password, function (err, isMatch) {
-        if (err || !isMatch)
+        if (err || !isMatch) {
           return response
             .send({ status: false, message: "Password does not match" })
             .status(404);
+        } else {
+          const token = generateAccessToken(user);
+
+          return response.send({
+            status: true,
+            message: "User authorized",
+            token,
+          });
+        }
       });
-
-      const token = generateAccessToken(user);
-
-      return response.send({ status: true, message: "User authorized", token });
     } catch (error) {
       return response
         .send({ status: false, message: error.message })

@@ -144,7 +144,7 @@ var useAuth = function (_a) {
         return jsonwebtoken_1.default.sign({}, secretOrKey, options);
     }
     router.post("/auth/login", function (request, response) { return __awaiter(_this, void 0, void 0, function () {
-        var _a, email, password, user_2, token, error_1;
+        var _a, email, password, user_2, error_1;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -160,13 +160,21 @@ var useAuth = function (_a) {
                                 .send({ status: false, message: "User not found" })
                                 .status(404)];
                     user_2.comparePassword(password, function (err, isMatch) {
-                        if (err || !isMatch)
+                        if (err || !isMatch) {
                             return response
                                 .send({ status: false, message: "Password does not match" })
                                 .status(404);
+                        }
+                        else {
+                            var token = generateAccessToken(user_2);
+                            return response.send({
+                                status: true,
+                                message: "User authorized",
+                                token: token,
+                            });
+                        }
                     });
-                    token = generateAccessToken(user_2);
-                    return [2 /*return*/, response.send({ status: true, message: "User authorized", token: token })];
+                    return [3 /*break*/, 4];
                 case 3:
                     error_1 = _b.sent();
                     return [2 /*return*/, response
