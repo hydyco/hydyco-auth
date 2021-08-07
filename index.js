@@ -67,11 +67,44 @@ var passport_jwt_1 = require("passport-jwt");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var fs_1 = __importDefault(require("fs"));
 var path_1 = __importDefault(require("path"));
+var bcrypt_1 = __importDefault(require("bcrypt"));
 var data = __importStar(require("./user.json"));
 var router = express_1.Router();
+var SALT_WORK_FACTOR = 10;
 var file = new core_1.HydycoFile();
 if (!fs_1.default.existsSync(path_1.default.join(file.hydycoMappingDir, "user.json")))
     file.writeMappingFile("user", data); // init data
+var user = new mongoose_plugin_1.HydycoModel("user");
+var userSchema = user.mongooseSchema();
+userSchema.pre("save", function (next) {
+    var u = this;
+    // only hash the password if it has been modified (or is new)
+    if (!u.isModified("password"))
+        return next();
+    // generate a salt
+    bcrypt_1.default.genSalt(SALT_WORK_FACTOR, function (err, salt) {
+        if (err)
+            return next(err);
+        // hash the password using our new salt
+        bcrypt_1.default.hash(u.password, salt, function (err, hash) {
+            if (err)
+                return next(err);
+            // override the cleartext password with the hashed one
+            u.password = hash;
+            next();
+        });
+    });
+});
+userSchema.methods.comparePassword = function (candidatePassword, cb) {
+    var u = this;
+    bcrypt_1.default.compare(candidatePassword, u.password, function (err, isMatch) {
+        if (err)
+            return cb(err);
+        cb(null, isMatch);
+    });
+};
+user.setMongooseSchema(userSchema);
+var User = user.mongooseModel();
 router.use(passport_1.default.initialize());
 var makeAuth = passport_1.default.authenticate("jwt", { session: false });
 exports.makeAuth = makeAuth;
@@ -89,13 +122,13 @@ var useAuth = function (_a) {
     };
     //JWT strategy options for passport (jwt middleware to verify & sign user)
     passport_1.default.use(new passport_jwt_1.Strategy(jwtOptions, function (token, done) { return __awaiter(_this, void 0, void 0, function () {
-        var user;
+        var user_1;
         return __generator(this, function (_a) {
             if (!token)
                 return [2 /*return*/, done(null, true)];
             try {
-                user = JSON.parse(token.aud);
-                return [2 /*return*/, done(null, user)];
+                user_1 = JSON.parse(token.aud);
+                return [2 /*return*/, done(null, user_1)];
             }
             catch (e) {
                 return [2 /*return*/, done(null, false)];
@@ -111,24 +144,31 @@ var useAuth = function (_a) {
         return jsonwebtoken_1.default.sign({}, secretOrKey, options);
     }
     router.post("/auth/login", function (request, response) { return __awaiter(_this, void 0, void 0, function () {
-        var email, User, user, token, error_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var _a, email, password, user_2, token, error_1;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
-                    email = request.body.email;
-                    User = new mongoose_plugin_1.HydycoModel("user").mongooseModel();
-                    _a.label = 1;
+                    _a = request.body, email = _a.email, password = _a.password;
+                    _b.label = 1;
                 case 1:
-                    _a.trys.push([1, 3, , 4]);
+                    _b.trys.push([1, 3, , 4]);
                     return [4 /*yield*/, User.findOne({ email: email })];
                 case 2:
-                    user = _a.sent();
-                    if (!user)
-                        return [2 /*return*/, response.send({ status: false, message: "User not found" })];
-                    token = generateAccessToken(user);
+                    user_2 = _b.sent();
+                    if (!user_2)
+                        return [2 /*return*/, response
+                                .send({ status: false, message: "User not found" })
+                                .status(404)];
+                    user_2.comparePassword(password, function (err, isMatch) {
+                        if (err)
+                            return response
+                                .send({ status: false, message: "Password does not match" })
+                                .status(404);
+                    });
+                    token = generateAccessToken(user_2);
                     return [2 /*return*/, response.send({ status: true, message: "User authorized", token: token })];
                 case 3:
-                    error_1 = _a.sent();
+                    error_1 = _b.sent();
                     return [2 /*return*/, response
                             .send({ status: false, message: error_1.message })
                             .status(500)];

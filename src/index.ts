@@ -6,15 +6,51 @@ import { Strategy as JwtStrategy, StrategyOptions } from "passport-jwt";
 import JWT from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
+import bcrypt from "bcrypt";
 
 import * as data from "./user.json";
 
 const router = Router();
-
+const SALT_WORK_FACTOR = 10;
 const file = new HydycoFile();
 
 if (!fs.existsSync(path.join(file.hydycoMappingDir, "user.json")))
   file.writeMappingFile("user", data); // init data
+
+const user = new HydycoModel("user");
+const userSchema = user.mongooseSchema();
+
+userSchema.pre("save", function (next) {
+  var u: any = this;
+
+  // only hash the password if it has been modified (or is new)
+  if (!u.isModified("password")) return next();
+
+  // generate a salt
+  bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
+    if (err) return next(err);
+
+    // hash the password using our new salt
+    bcrypt.hash(u.password, salt, function (err, hash) {
+      if (err) return next(err);
+      // override the cleartext password with the hashed one
+      u.password = hash;
+      next();
+    });
+  });
+});
+
+userSchema.methods.comparePassword = function (candidatePassword, cb) {
+  const u: any = this;
+  bcrypt.compare(candidatePassword, u.password, function (err, isMatch) {
+    if (err) return cb(err);
+    cb(null, isMatch);
+  });
+};
+
+user.setMongooseSchema(userSchema);
+
+const User = user.mongooseModel();
 
 router.use(passport.initialize());
 
@@ -53,13 +89,21 @@ const useAuth = ({ secretOrKey }) => {
   }
 
   router.post("/auth/login", async (request, response) => {
-    const { email } = request.body;
-    const User = new HydycoModel("user").mongooseModel();
+    const { email, password } = request.body;
 
     try {
-      const user = await User.findOne({ email: email });
+      const user: any = await User.findOne({ email: email });
       if (!user)
-        return response.send({ status: false, message: "User not found" });
+        return response
+          .send({ status: false, message: "User not found" })
+          .status(404);
+
+      user.comparePassword(password, function (err, isMatch) {
+        if (err)
+          return response
+            .send({ status: false, message: "Password does not match" })
+            .status(404);
+      });
 
       const token = generateAccessToken(user);
 
