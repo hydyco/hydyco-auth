@@ -160,7 +160,7 @@ var useAuth = function (_a) {
                                 .send({ status: false, message: "User not found" })
                                 .status(404)];
                     user_2.comparePassword(password, function (err, isMatch) {
-                        if (err)
+                        if (err || !isMatch)
                             return response
                                 .send({ status: false, message: "Password does not match" })
                                 .status(404);

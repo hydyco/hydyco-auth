@@ -99,7 +99,7 @@ const useAuth = ({ secretOrKey }) => {
           .status(404);
 
       user.comparePassword(password, function (err, isMatch) {
-        if (err)
+        if (err || !isMatch)
           return response
             .send({ status: false, message: "Password does not match" })
             .status(404);
