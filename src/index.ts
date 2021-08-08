@@ -20,6 +20,20 @@ if (!fs.existsSync(path.join(file.hydycoMappingDir, "user.json")))
 const user = new HydycoModel("user");
 const userSchema = user.mongooseSchema();
 
+/**
+ * Function - Generate auth token using user object and secret
+ * @param {Object} user - User info object
+ * @param {string} secretKey - secret key
+ * @return {string} token
+ */
+const generateAuthToken = (user: Object, secretOrKey: string): string => {
+  const options: JWT.SignOptions = {
+    expiresIn: "1y",
+    audience: JSON.stringify(user),
+  };
+  return JWT.sign({}, secretOrKey, options);
+};
+
 userSchema.pre("save", function (next) {
   var u: any = this;
 
@@ -80,14 +94,6 @@ const useAuth = ({ secretOrKey }) => {
     })
   );
 
-  function generateAccessToken(user: Object): string {
-    const options: JWT.SignOptions = {
-      expiresIn: "1y",
-      audience: JSON.stringify(user),
-    };
-    return JWT.sign({}, secretOrKey, options);
-  }
-
   router.post("/auth/login", async (request, response) => {
     const { email, password } = request.body;
 
@@ -104,7 +110,7 @@ const useAuth = ({ secretOrKey }) => {
             .send({ status: false, message: "Password does not match" })
             .status(404);
         } else {
-          const token = generateAccessToken(user);
+          const token = generateAuthToken(user, secretOrKey);
 
           return response.send({
             status: true,
@@ -123,4 +129,4 @@ const useAuth = ({ secretOrKey }) => {
   return router;
 };
 
-export { useAuth, makeAuth };
+export { useAuth, makeAuth, generateAuthToken };

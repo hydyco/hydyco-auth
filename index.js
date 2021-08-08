@@ -58,7 +58,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeAuth = exports.useAuth = void 0;
+exports.generateAuthToken = exports.makeAuth = exports.useAuth = void 0;
 var express_1 = require("express");
 var passport_1 = __importDefault(require("passport"));
 var mongoose_plugin_1 = require("@hydyco/mongoose-plugin");
@@ -76,6 +76,20 @@ if (!fs_1.default.existsSync(path_1.default.join(file.hydycoMappingDir, "user.js
     file.writeMappingFile("user", data); // init data
 var user = new mongoose_plugin_1.HydycoModel("user");
 var userSchema = user.mongooseSchema();
+/**
+ * Function - Generate auth token using user object and secret
+ * @param {Object} user - User info object
+ * @param {string} secretKey - secret key
+ * @return {string} token
+ */
+var generateAuthToken = function (user, secretOrKey) {
+    var options = {
+        expiresIn: "1y",
+        audience: JSON.stringify(user),
+    };
+    return jsonwebtoken_1.default.sign({}, secretOrKey, options);
+};
+exports.generateAuthToken = generateAuthToken;
 userSchema.pre("save", function (next) {
     var u = this;
     // only hash the password if it has been modified (or is new)
@@ -136,13 +150,6 @@ var useAuth = function (_a) {
             return [2 /*return*/];
         });
     }); }));
-    function generateAccessToken(user) {
-        var options = {
-            expiresIn: "1y",
-            audience: JSON.stringify(user),
-        };
-        return jsonwebtoken_1.default.sign({}, secretOrKey, options);
-    }
     router.post("/auth/login", function (request, response) { return __awaiter(_this, void 0, void 0, function () {
         var _a, email, password, user_2, error_1;
         return __generator(this, function (_b) {
@@ -166,7 +173,7 @@ var useAuth = function (_a) {
                                 .status(404);
                         }
                         else {
-                            var token = generateAccessToken(user_2);
+                            var token = generateAuthToken(user_2, secretOrKey);
                             return response.send({
                                 status: true,
                                 message: "User authorized",
