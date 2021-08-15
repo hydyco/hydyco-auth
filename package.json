@@ -1,7 +1,7 @@
 {
   "name": "@hydyco/auth",
   "version": "0.0.1",
-  "description": "",
+  "description": "Auth module for Hydyco",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
