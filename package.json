@@ -8,21 +8,24 @@
     "start": "tsc-watch --onSuccess \"node ./index.js\""
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@hydyco/mongoose-plugin": "git+ssh://git@github.com/iamrahultanwar/hydyco-mongoose-plugin.git",
-    "@types/jsonwebtoken": "^8.5.4",
+    "@hydyco/mongoose-plugin": "^0.0.1",
     "bcrypt": "^5.0.1",
     "jsonwebtoken": "^8.5.1",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^8.5.4",
     "@types/bcrypt": "^5.0.0",
     "@types/express": "^4.17.12",
     "@types/node": "^15.12.5",
     "tsc-watch": "^4.4.0",
     "typescript": "^4.3.4"
+  },
+  "author": "Rahul Tanwar <mr.rahultanwar@gmail.com>",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
   }
 }
