@@ -34,33 +34,41 @@ const generateAuthToken = (user: Object, secretOrKey: string): string => {
   return JWT.sign({}, secretOrKey, options);
 };
 
-userSchema.pre("save", function (next) {
-  var u: any = this;
+/**
+ * Function - Handle Password hash and compare
+ * @param {String} - password
+ */
+const authMongoosePlugin = function (schema) {
+  schema.pre("save", function (next) {
+    var u: any = this;
 
-  // only hash the password if it has been modified (or is new)
-  if (!u.isModified("password")) return next();
+    // only hash the password if it has been modified (or is new)
+    if (!u.isModified("password")) return next();
 
-  // generate a salt
-  bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
-    if (err) return next(err);
-
-    // hash the password using our new salt
-    bcrypt.hash(u.password, salt, function (err, hash) {
+    // generate a salt
+    bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
       if (err) return next(err);
-      // override the cleartext password with the hashed one
-      u.password = hash;
-      next();
+
+      // hash the password using our new salt
+      bcrypt.hash(u.password, salt, function (err, hash) {
+        if (err) return next(err);
+        // override the cleartext password with the hashed one
+        u.password = hash;
+        next();
+      });
     });
   });
-});
 
-userSchema.methods.comparePassword = function (candidatePassword, cb) {
-  const u: any = this;
-  bcrypt.compare(candidatePassword, u.password, function (err, isMatch) {
-    if (err) return cb(err);
-    cb(null, isMatch);
-  });
+  schema.methods.comparePassword = function (candidatePassword, cb) {
+    const u: any = this;
+    bcrypt.compare(candidatePassword, u.password, function (err, isMatch) {
+      if (err) return cb(err);
+      cb(null, isMatch);
+    });
+  };
 };
+
+userSchema.plugin(authMongoosePlugin);
 
 user.setMongooseSchema(userSchema);
 
@@ -129,4 +137,4 @@ const useAuth = ({ secretOrKey }) => {
   return router;
 };
 
-export { useAuth, makeAuth, generateAuthToken };
+export { useAuth, makeAuth, generateAuthToken, authMongoosePlugin };
