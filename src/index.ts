@@ -102,6 +102,10 @@ const useAuth = ({ secretOrKey }) => {
     })
   );
 
+  /**
+   * User Login Method
+   */
+
   router.post("/auth/login", async (request, response) => {
     const { email, password } = request.body;
 
@@ -131,6 +135,41 @@ const useAuth = ({ secretOrKey }) => {
       return response
         .send({ status: false, message: error.message })
         .status(500);
+    }
+  });
+
+  /**
+   * Register admin user
+   */
+
+  router.post("/auth/admin/register", async (request, response) => {
+    const { email, password } = request.body;
+
+    try {
+      const count = await User.find().countDocuments();
+      if (count > 0) {
+        return response.send({
+          status: false,
+          message: "Admin user is already present",
+        });
+      }
+      const user: any = new User();
+      user.email = email;
+      user.password = password;
+      user.role = "admin";
+      await user.save();
+
+      const token = generateAuthToken(user, "random");
+      return response.send({
+        status: true,
+        message: "Register Successful",
+        token,
+      });
+    } catch (error) {
+      return response.status(500).send({
+        status: false,
+        message: error.message,
+      });
     }
   });
 
