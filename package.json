@@ -1,6 +1,6 @@
 {
   "name": "@hydyco/auth",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Auth module for Hydyco",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "keywords": [],
   "dependencies": {
-    "@hydyco/mongoose-plugin": "^0.0.8",
+    "@hydyco/mongoose-plugin": "^0.0.9",
     "bcrypt": "^5.0.1",
     "jsonwebtoken": "^8.5.1",
     "passport": "^0.4.1",
