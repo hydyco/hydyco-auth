@@ -1,24 +1,18 @@
 import { Router, Request } from "express";
 import passport from "passport";
-import { HydycoModel } from "@hydyco/mongoose-plugin";
 import { HydycoFile } from "@hydyco/core";
 import { Strategy as JwtStrategy, StrategyOptions } from "passport-jwt";
 import JWT from "jsonwebtoken";
-import fs from "fs";
-import path from "path";
+
 import bcrypt from "bcrypt";
 
 import * as data from "./user.json";
 
 const router = Router();
 const SALT_WORK_FACTOR = 10;
-const file = new HydycoFile();
+const { createSkipFile } = HydycoFile;
 
-if (!fs.existsSync(path.join(file.hydycoMappingDir, "user.json")))
-  file.writeMappingFile("user", data); // init data
-
-const user = new HydycoModel("user");
-const userSchema = user.mongooseSchema();
+createSkipFile("user", data);
 
 /**
  * Function - Generate auth token using user object and secret
@@ -26,11 +20,16 @@ const userSchema = user.mongooseSchema();
  * @param {string} secretKey - secret key
  * @return {string} token
  */
-const generateAuthToken = (user: Object, secretOrKey: string): string => {
+const generateAuthToken = (
+  user: Object,
+  secretOrKey: string,
+  expiresIn: any
+): string => {
   const options: JWT.SignOptions = {
-    expiresIn: "1y",
+    expiresIn: expiresIn,
     audience: JSON.stringify(user),
   };
+
   return JWT.sign({}, secretOrKey, options);
 };
 
@@ -68,17 +67,17 @@ const authMongoosePlugin = function (schema) {
   };
 };
 
-userSchema.plugin(authMongoosePlugin);
-
-user.setMongooseSchema(userSchema);
-
-const User = user.mongooseModel();
-
 router.use(passport.initialize());
 
-const makeAuth = passport.authenticate("jwt", { session: false });
+const authMiddleware = passport.authenticate("jwt", { session: false });
 
-const useAuth = ({ secretOrKey }) => {
+const AuthPlugin = ({ secretOrKey, expiresIn }, HydycoModel) => {
+  const user = new HydycoModel("user");
+  const userSchema = user.Schema();
+  userSchema.plugin(authMongoosePlugin);
+
+  const User = user.setSchema(userSchema).Model();
+
   const jwtOptions: StrategyOptions = {
     jwtFromRequest: (req: Request) => {
       let token = null;
@@ -105,7 +104,6 @@ const useAuth = ({ secretOrKey }) => {
   /**
    * User Login Method
    */
-
   router.post("/auth/login", async (request, response) => {
     const { email, password } = request.body;
 
@@ -122,7 +120,11 @@ const useAuth = ({ secretOrKey }) => {
             .send({ status: false, message: "Password does not match" })
             .status(404);
         } else {
-          const token = generateAuthToken(user, secretOrKey);
+          const token = generateAuthToken(
+            { id: user._id },
+            secretOrKey,
+            expiresIn
+          );
 
           return response.send({
             status: true,
@@ -159,7 +161,7 @@ const useAuth = ({ secretOrKey }) => {
       user.role = "admin";
       await user.save();
 
-      const token = generateAuthToken(user, "random");
+      const token = generateAuthToken({ id: user._id }, secretOrKey, expiresIn);
       return response.send({
         status: true,
         message: "Register Successful",
@@ -176,4 +178,4 @@ const useAuth = ({ secretOrKey }) => {
   return router;
 };
 
-export { useAuth, makeAuth, generateAuthToken, authMongoosePlugin };
+export { AuthPlugin, authMiddleware, generateAuthToken, authMongoosePlugin };
