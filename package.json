@@ -1,6 +1,6 @@
 {
   "name": "@hydyco/auth",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Auth module for Hydyco",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "typescript": "^4.3.4"
   },
   "peerDependencies": {
-    "@hydyco/core": "^0.0.13"
+    "@hydyco/core": "^0.*.*"
   },
   "author": "Rahul Tanwar <mr.rahultanwar@gmail.com>",
   "license": "ISC",
